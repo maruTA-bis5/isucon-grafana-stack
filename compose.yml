@@ -9,6 +9,7 @@ services:
       - "9411:9411"
       - "3200:3200"
       - "4318:4318"
+    restart: always
 
   loki:
     image: grafana/loki:2.9.1
@@ -22,6 +23,7 @@ services:
       - JAEGER_ENDPOINT=http://tempo:14268/api/traces # send traces to Tempo
       - JAEGER_SAMPLER_TYPE=const
       - JAEGER_SAMPLER_PARAM=1
+    restart: always
 
   prometheus:
     image: prom/prometheus
@@ -33,6 +35,7 @@ services:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
       - "9090:9090"
+    restart: always
 
   grafana:
     image: grafana/grafana-enterprise:10.2.2
@@ -45,3 +48,4 @@ services:
       - GF_AUTH_DISABLE_LOGIN_FORM=true
     ports:
       - "3000:3000"
+    restart: always
