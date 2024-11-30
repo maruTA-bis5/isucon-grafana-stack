@@ -26,7 +26,7 @@ services:
     restart: always
 
   prometheus:
-    image: prom/prometheus:3.0.1
+    image: prom/prometheus:v3.0.1
     command:
       - --enable-feature=exemplar-storage
       - --web.enable-remote-write-receiver
