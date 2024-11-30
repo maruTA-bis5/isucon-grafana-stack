@@ -48,3 +48,9 @@ ruler:
 # If you would like to disable reporting, uncomment the following lines:
 #analytics:
 #  reporting_enabled: false
+
+overrides:
+  defaults:
+    ingestion:
+      strategy: global
+      limit_bytes: 150000000
