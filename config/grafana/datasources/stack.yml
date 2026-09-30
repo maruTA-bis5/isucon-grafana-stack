@@ -6,6 +6,7 @@ apiVersion: 1
 datasources:
   # <string, required> name of the datasource. Required
 - name: prometheus
+  uid: prometheus
   # <string, required> datasource type. Required
   type: prometheus
   # <string, required> access mode. direct or proxy. Required
@@ -18,9 +19,15 @@ datasources:
   editable: true
   jsonData:
     timeInterval: 1s
+    exemplarTraceIdDestinations:
+      - name: trace_id
+        datasourceUid: tempo
+      - name: traceID
+        datasourceUid: tempo
 
   # <string, required> name of the datasource. Required
 - name: tempo
+  uid: tempo
   # <string, required> datasource type. Required
   type: tempo
   # <string, required> access mode. direct or proxy. Required
@@ -34,9 +41,31 @@ datasources:
   jsonData:
     tracesToLogsV2:
       datasourceUid: 'loki'
+      spanStartTimeShift: '-1m'
+      spanEndTimeShift: '1m'
+      tags:
+        - key: service.name
+          value: service_name
+      customQuery: true
+      query: '{$$__tags} | trace_id = "$${__span.traceId}"'
+    tracesToMetrics:
+      datasourceUid: prometheus
+      spanStartTimeShift: '-5m'
+      spanEndTimeShift: '5m'
+      tags:
+        - key: service.name
+          value: service_name
+      queries:
+        - name: Service metrics
+          query: '{$$__tags}'
+    serviceMap:
+      datasourceUid: prometheus
+    nodeGraph:
+      enabled: true
 
   # <string, required> name of the datasource. Required
 - name: loki
+  uid: loki
   # <string, required> datasource type. Required
   type: loki
   # <string, required> access mode. direct or proxy. Required
@@ -47,3 +76,11 @@ datasources:
   url: http://loki:3100
   # <bool> allow users to edit datasources from the UI.
   editable: true
+  jsonData:
+    derivedFields:
+      - name: TraceID
+        matcherType: label
+        matcherRegex: '^trace_id$'
+        datasourceUid: tempo
+        url: '$${__value.raw}'
+        urlDisplayLabel: View trace
