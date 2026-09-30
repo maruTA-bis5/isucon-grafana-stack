@@ -1,13 +1,24 @@
 services:
+  alloy:
+    image: grafana/alloy:v1.20.1
+    command: [ "run", "/etc/alloy/config.alloy" ]
+    volumes:
+      - ./config/alloy/config.alloy:/etc/alloy/config.alloy:ro
+    ports:
+      # OTLP ingress for all signals from trusted hosts; restrict access with a firewall.
+      - "4317:4317"                                   # OTLP/gRPC: <stack-host>:4317
+      - "4318:4318"                                   # OTLP/HTTP: http://<stack-host>:4318
+    depends_on:
+      - tempo
+      - loki
+      - prometheus
+    restart: always
+
   tempo:
     image: grafana/tempo:3.1.0
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
       - ./config/tempo.yaml:/etc/tempo.yaml:ro
-    ports:
-      - "3200:3200"
-      - "4317:4317"                                   # Collector OTLP/gRPC traces endpoint: tempo:4317
-      - "4318:4318"                                   # Collector OTLP/HTTP traces endpoint: http://tempo:4318
     restart: always
 
   loki:
@@ -15,8 +26,6 @@ services:
     command: [ "-config.file=/etc/loki/loki-config.yaml" ]
     volumes:
       - ./config/loki-config.yaml:/etc/loki/loki-config.yaml:ro
-    ports:
-      - "3100:3100"                                   # Collector OTLP/HTTP logs endpoint: http://loki:3100/otlp
     restart: always
 
   prometheus:
@@ -28,8 +37,6 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    ports:
-      - "9090:9090"                                   # Collector OTLP/HTTP metrics endpoint: http://prometheus:9090/api/v1/otlp
     restart: always
 
   grafana:
