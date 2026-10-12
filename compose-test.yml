@@ -3,7 +3,7 @@ services:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otelcol/config.yaml"]
     environment:
-      ALLOY_OTLP_AUTHORIZATION: "${ALLOY_OTLP_AUTHORIZATION:- Basic b3RscC11c2VyOm90bHAtcGFzc3dvcmQ=}"
+      ALLOY_OTLP_AUTHORIZATION: "${ALLOY_OTLP_AUTHORIZATION:-Basic b3RscC11c2VyOm90bHAtcGFzc3dvcmQ=}"
     expose:
       - "4317"
       - "4318"

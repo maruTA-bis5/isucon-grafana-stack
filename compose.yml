@@ -5,8 +5,8 @@ services:
     volumes:
       - ./config/alloy/config.alloy:/etc/alloy/config.alloy:ro
     environment:
-      ALLOY_OTLP_USERNAME: "${ALLOY_OTLP_USERNAME:- otlp-user}"
-      ALLOY_OTLP_PASSWORD: "${ALLOY_OTLP_PASSWORD:- otlp-password}"
+      ALLOY_OTLP_USERNAME: "${ALLOY_OTLP_USERNAME:-otlp-user}"
+      ALLOY_OTLP_PASSWORD: "${ALLOY_OTLP_PASSWORD:-otlp-password}"
     ports:
       # Defaults to loopback; set ALLOY_BIND_IP to a reachable NIC IP for remote senders.
       - "${ALLOY_BIND_IP:-127.0.0.1}:4317:4317"       # OTLP/gRPC: <stack-host>:4317
