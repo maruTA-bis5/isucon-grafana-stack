@@ -4,10 +4,13 @@ services:
     command: [ "run", "/etc/alloy/config.alloy" ]
     volumes:
       - ./config/alloy/config.alloy:/etc/alloy/config.alloy:ro
+    environment:
+      ALLOY_OTLP_USERNAME: "${ALLOY_OTLP_USERNAME:- otlp-user}"
+      ALLOY_OTLP_PASSWORD: "${ALLOY_OTLP_PASSWORD:- otlp-password}"
     ports:
-      # OTLP ingress for all signals from trusted hosts; restrict access with a firewall.
-      - "4317:4317"                                   # OTLP/gRPC: <stack-host>:4317
-      - "4318:4318"                                   # OTLP/HTTP: http://<stack-host>:4318
+      # Defaults to loopback; set ALLOY_BIND_IP to a reachable NIC IP for remote senders.
+      - "${ALLOY_BIND_IP:-127.0.0.1}:4317:4317"       # OTLP/gRPC: <stack-host>:4317
+      - "${ALLOY_BIND_IP:-127.0.0.1}:4318:4318"       # OTLP/HTTP: http://<stack-host>:4318
     depends_on:
       - tempo
       - loki

@@ -52,6 +52,8 @@ processors:
 exporters:
   otlp_grpc:
     endpoint: alloy:4317
+    headers:
+      authorization: ${env:ALLOY_OTLP_AUTHORIZATION}
     tls:
       insecure: true
 

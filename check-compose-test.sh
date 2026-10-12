@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+export ALLOY_OTLP_USERNAME="${ALLOY_OTLP_USERNAME:-otlp-user}"
+export ALLOY_OTLP_PASSWORD="${ALLOY_OTLP_PASSWORD:-otlp-password}"
+export ALLOY_OTLP_AUTHORIZATION="Basic $(printf '%s' "${ALLOY_OTLP_USERNAME}:${ALLOY_OTLP_PASSWORD}" | base64 | tr -d '\n')"
+
 workspace_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 compose=(docker compose -f "$workspace_dir/compose.yml" -f "$workspace_dir/compose-test.yml")
 prometheus_url="http://localhost:9090"
@@ -219,6 +223,31 @@ trace_marker="compose-test-trace-$(date -u +%Y%m%dT%H%M%S)-${BASHPID}-${RANDOM}"
 otelcol_container_id="$("${compose[@]}" ps -q otelcol)"
 if [[ -z "$otelcol_container_id" ]]; then
     printf 'Could not find the OpenTelemetry Collector container for the trace test.\n' >&2
+    exit 1
+fi
+
+printf 'Checking that Alloy rejects unauthenticated OTLP/HTTP requests...\n'
+if ! docker run --rm -i --network "container:$otelcol_container_id" \
+    --entrypoint python "$log_query_image" - <<'PY'
+import urllib.error
+from urllib.request import Request, urlopen
+
+request = Request(
+    "http://alloy:4318/v1/traces",
+    data=b"{\"resourceSpans\":[]}",
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+try:
+    with urlopen(request, timeout=5) as response:
+        raise SystemExit("Alloy accepted unauthenticated OTLP/HTTP (HTTP {}).".format(response.status))
+except urllib.error.HTTPError as error:
+    if error.code != 401:
+        raise SystemExit("Expected HTTP 401 but Alloy returned HTTP {}.".format(error.code))
+    print("Alloy rejected unauthenticated OTLP/HTTP with HTTP 401.")
+PY
+then
+    printf 'Alloy did not reject the unauthenticated OTLP/HTTP request.\n' >&2
     exit 1
 fi
 
