@@ -1,0 +1,71 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  prometheus:
+    config:
+      global:
+        scrape_interval: 15s
+      scrape_configs:
+        - job_name: mysql
+          static_configs:
+            - targets: ["mysql-exporter:9104"]
+        - job_name: nginx
+          static_configs:
+            - targets: ["nginx-exporter:9113"]
+        - job_name: redis
+          static_configs:
+            - targets: ["redis-exporter:9121"]
+        - job_name: node
+          static_configs:
+            - targets: ["node-exporter:9100"]
+  filelog/mysql:
+    include:
+      - /var/log/test-services/mysql/general.log
+      - /var/log/test-services/mysql/error.log
+    start_at: beginning
+    include_file_path: true
+    resource:
+      service.name: mysql
+  filelog/nginx:
+    include:
+      - /var/log/test-services/nginx/test-access.log
+      - /var/log/test-services/nginx/test-error.log
+    start_at: beginning
+    include_file_path: true
+    resource:
+      service.name: nginx
+  filelog/redis:
+    include:
+      - /var/log/test-services/redis/redis.log
+    start_at: beginning
+    include_file_path: true
+    resource:
+      service.name: redis
+
+processors:
+  batch: {}
+
+exporters:
+  otlp_grpc:
+    endpoint: alloy:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp_grpc]
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [otlp_grpc]
+    logs:
+      receivers: [filelog/mysql, filelog/nginx, filelog/redis]
+      processors: [batch]
+      exporters: [otlp_grpc]
