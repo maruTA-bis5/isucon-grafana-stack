@@ -47,10 +47,14 @@ services:
     volumes:
       - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
       - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
     environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_GITHUB_ENABLED=${GF_AUTH_GITHUB_ENABLED}
+      - GF_AUTH_GITHUB_CLIENT_ID=${GF_AUTH_GITHUB_CLIENT_ID}
+      - GF_AUTH_GITHUB_CLIENT_SECRET=${GF_AUTH_GITHUB_CLIENT_SECRET}
+      - GF_AUTH_GITHUB_ALLOWED_ORGANIZATIONS=${GF_AUTH_GITHUB_ALLOWED_ORGANIZATIONS}
+      - GF_AUTH_GITHUB_ROLE_ATTRIBUTE_PATH=${GF_AUTH_GITHUB_ROLE_ATTRIBUTE_PATH}
+      - GF_AUTH_GITHUB_SKIP_ORG_ROLE_SYNC=${GF_AUTH_GITHUB_SKIP_ORG_ROLE_SYNC}
     ports:
       - "3000:3000"
     restart: always
